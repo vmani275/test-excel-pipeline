@@ -3,7 +3,7 @@ import csv
 
 
 PRIMARY_LABELS = {'aaa', 'bbb', 'ccc', 'ddd', 'eee', 'fff'}
-TEST_CHANGE_LABELS = {'test change 2'}
+TEST_CHANGE_LABELS = {'test change 2', 'test change2'}
 
 
 def normalize(value: str) -> str:
