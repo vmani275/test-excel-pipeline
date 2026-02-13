@@ -8,7 +8,7 @@ Run:
 python scripts/plot_stacked_bar.py
 ```
 
-This writes `charts/stacked_bar.svg`, a stacked bar chart showing row counts per CSV split by primary label rows (`aaa`/`bbb`/`ccc`/`ddd`/`eee`/`fff`) and `test change2` rows, using only CSV files in `data/` and plotting file order `one`→`five`.
+This writes `charts/stacked_bar.svg`, a stacked bar chart showing row counts per CSV split by primary label rows (`aaa`/`bbb`/`ccc`/`ddd`/`eee`/`fff`) and `test change2` rows. It automatically includes all CSV files in `data/` (case-insensitive `.csv` extension) and plots them alphabetically by filename.
 
 
 
