@@ -2,8 +2,7 @@ from pathlib import Path
 import csv
 
 
-FILE_ORDER = ['one', 'two', 'three', 'four', 'five']
-PRIMARY_LABELS = {'aaa', 'bbb', 'ccc', 'ddd', 'eee'}
+PRIMARY_LABELS = {'aaa', 'bbb', 'ccc', 'ddd', 'eee', 'fff'}
 TEST_CHANGE_LABELS = {'test change 2', 'test change2'}
 
 
@@ -12,9 +11,12 @@ def normalize(value: str) -> str:
 
 
 def load_counts(data_dir: Path):
-    csv_paths = {path.stem: path for path in data_dir.glob('*.csv')}
-    ordered_names = [name for name in FILE_ORDER if name in csv_paths]
-    ordered_names.extend(name for name in sorted(csv_paths) if name not in FILE_ORDER)
+    csv_paths = {
+        path.stem: path
+        for path in data_dir.iterdir()
+        if path.is_file() and path.suffix.lower() == '.csv'
+    }
+    ordered_names = sorted(csv_paths, key=str.lower)
 
     if not ordered_names:
         raise SystemExit(f'No CSV files found in {data_dir}')
@@ -105,7 +107,7 @@ def render_svg(data, out_path: Path):
     legend_x = width - 250
     legend_y = 20
     lines.append(f'<rect x="{legend_x}" y="{legend_y}" width="14" height="14" fill="{primary_color}" />')
-    lines.append(f'<text class="legend" x="{legend_x+22}" y="{legend_y+12}">Primary label rows (aaa/bbb/ccc/ddd/eee)</text>')
+    lines.append(f'<text class="legend" x="{legend_x+22}" y="{legend_y+12}">Primary label rows (aaa/bbb/ccc/ddd/eee/fff)</text>')
     lines.append(f'<rect x="{legend_x}" y="{legend_y+22}" width="14" height="14" fill="{test_color}" />')
     lines.append(f'<text class="legend" x="{legend_x+22}" y="{legend_y+34}">test change2 rows</text>')
 
