@@ -50,7 +50,7 @@ def render_svg(data, out_path: Path):
     chart_h = height - margin_top - margin_bottom
 
     max_total = max(primary + test for _, primary, test in data)
-    y_max = max_total
+    y_max = max(max_total, 1)
 
     n = len(data)
     slot_w = chart_w / n
@@ -73,7 +73,9 @@ def render_svg(data, out_path: Path):
     lines.append(f'<text class="title" x="{width/2}" y="36" text-anchor="middle">Rows per CSV (Stacked)</text>')
     lines.append(f'<text class="subtitle" x="{width/2}" y="58" text-anchor="middle">Primary label rows + test change2 rows</text>')
 
-    ticks = [0, 3, 6, 9, 12]
+    tick_count = 4
+    tick_step = max(1, -(-y_max // tick_count))
+    ticks = list(range(0, tick_step * tick_count + 1, tick_step))
     for t in ticks:
         y = y_scale(t)
         lines.append(f'<line x1="{margin_left}" y1="{y:.2f}" x2="{width-margin_right}" y2="{y:.2f}" stroke="#e5e7eb" stroke-width="1" />')
