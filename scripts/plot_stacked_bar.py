@@ -2,25 +2,37 @@ from pathlib import Path
 import csv
 
 
+FILE_ORDER = ['one', 'two', 'three', 'four', 'five']
+PRIMARY_LABELS = {'aaa', 'bbb', 'ccc', 'ddd', 'eee'}
+TEST_CHANGE_LABELS = {'test change 2', 'test change2'}
+
+
+def normalize(value: str) -> str:
+    return ' '.join(value.strip().lower().split())
+
+
 def load_counts(data_dir: Path):
-    csv_paths = sorted(data_dir.glob('*.csv'))
-    if not csv_paths:
+    csv_paths = {path.stem: path for path in data_dir.glob('*.csv')}
+    ordered_names = [name for name in FILE_ORDER if name in csv_paths]
+    ordered_names.extend(name for name in sorted(csv_paths) if name not in FILE_ORDER)
+
+    if not ordered_names:
         raise SystemExit(f'No CSV files found in {data_dir}')
 
     results = []
-    for path in csv_paths:
-        base = path.stem
+    for base in ordered_names:
+        path = csv_paths[base]
         with path.open('r', newline='', encoding='utf-8-sig') as f:
             reader = csv.DictReader(f)
-            normal = 0
-            test_change = 0
+            primary_label = 0
+            test_change2 = 0
             for row in reader:
-                value = row.get('File', '').strip().lower()
-                if value == 'test change':
-                    test_change += 1
-                else:
-                    normal += 1
-        results.append((base, normal, test_change))
+                value = normalize(row.get('File', ''))
+                if value in TEST_CHANGE_LABELS:
+                    test_change2 += 1
+                elif value in PRIMARY_LABELS:
+                    primary_label += 1
+        results.append((base, primary_label, test_change2))
     return results
 
 
@@ -35,7 +47,7 @@ def render_svg(data, out_path: Path):
     chart_w = width - margin_left - margin_right
     chart_h = height - margin_top - margin_bottom
 
-    max_total = max(normal + test for _, normal, test in data)
+    max_total = max(primary + test for _, primary, test in data)
     y_max = max_total
 
     n = len(data)
@@ -57,50 +69,45 @@ def render_svg(data, out_path: Path):
     lines.append('</style>')
 
     lines.append(f'<text class="title" x="{width/2}" y="36" text-anchor="middle">Rows per CSV (Stacked)</text>')
-    lines.append(f'<text class="subtitle" x="{width/2}" y="58" text-anchor="middle">Normal label rows + test change rows</text>')
+    lines.append(f'<text class="subtitle" x="{width/2}" y="58" text-anchor="middle">Primary label rows + test change2 rows</text>')
 
-    # Grid and y ticks
     ticks = [0, 3, 6, 9, 12]
     for t in ticks:
         y = y_scale(t)
         lines.append(f'<line x1="{margin_left}" y1="{y:.2f}" x2="{width-margin_right}" y2="{y:.2f}" stroke="#e5e7eb" stroke-width="1" />')
         lines.append(f'<text class="tick" x="{margin_left-10}" y="{y+4:.2f}" text-anchor="end">{t}</text>')
 
-    # axes
     x_axis_y = margin_top + chart_h
     lines.append(f'<line x1="{margin_left}" y1="{x_axis_y}" x2="{width-margin_right}" y2="{x_axis_y}" stroke="#333" stroke-width="1.5" />')
     lines.append(f'<line x1="{margin_left}" y1="{margin_top}" x2="{margin_left}" y2="{x_axis_y}" stroke="#333" stroke-width="1.5" />')
 
-    normal_color = '#4f46e5'
+    primary_color = '#4f46e5'
     test_color = '#f97316'
 
-    # Bars
-    for idx, (name, normal, test) in enumerate(data):
+    for idx, (name, primary, test) in enumerate(data):
         x_center = margin_left + (idx + 0.5) * slot_w
         x = x_center - bar_w / 2
 
-        normal_top = y_scale(normal)
-        normal_h = x_axis_y - normal_top
-        lines.append(f'<rect x="{x:.2f}" y="{normal_top:.2f}" width="{bar_w:.2f}" height="{normal_h:.2f}" fill="{normal_color}" />')
+        primary_top = y_scale(primary)
+        primary_h = x_axis_y - primary_top
+        lines.append(f'<rect x="{x:.2f}" y="{primary_top:.2f}" width="{bar_w:.2f}" height="{primary_h:.2f}" fill="{primary_color}" />')
 
-        test_top = y_scale(normal + test)
-        test_h = normal_top - test_top
+        test_top = y_scale(primary + test)
+        test_h = primary_top - test_top
         lines.append(f'<rect x="{x:.2f}" y="{test_top:.2f}" width="{bar_w:.2f}" height="{test_h:.2f}" fill="{test_color}" />')
 
         lines.append(f'<text class="tick" x="{x_center:.2f}" y="{x_axis_y+22}" text-anchor="middle">{name}</text>')
-        lines.append(f'<text class="tick" x="{x_center:.2f}" y="{test_top-8:.2f}" text-anchor="middle">{normal+test}</text>')
+        lines.append(f'<text class="tick" x="{x_center:.2f}" y="{test_top-8:.2f}" text-anchor="middle">{primary+test}</text>')
 
-    # Axis labels
     lines.append(f'<text class="axis-label" x="{width/2}" y="{height-40}" text-anchor="middle">CSV file</text>')
     lines.append(f'<text class="axis-label" transform="translate(25 {height/2}) rotate(-90)" text-anchor="middle">Row count</text>')
 
-    # Legend
     legend_x = width - 250
     legend_y = 20
-    lines.append(f'<rect x="{legend_x}" y="{legend_y}" width="14" height="14" fill="{normal_color}" />')
-    lines.append(f'<text class="legend" x="{legend_x+22}" y="{legend_y+12}">Primary label rows</text>')
+    lines.append(f'<rect x="{legend_x}" y="{legend_y}" width="14" height="14" fill="{primary_color}" />')
+    lines.append(f'<text class="legend" x="{legend_x+22}" y="{legend_y+12}">Primary label rows (aaa/bbb/ccc/ddd/eee)</text>')
     lines.append(f'<rect x="{legend_x}" y="{legend_y+22}" width="14" height="14" fill="{test_color}" />')
-    lines.append(f'<text class="legend" x="{legend_x+22}" y="{legend_y+34}">test change rows</text>')
+    lines.append(f'<text class="legend" x="{legend_x+22}" y="{legend_y+34}">test change2 rows</text>')
 
     lines.append('</svg>')
 
