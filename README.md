@@ -12,9 +12,10 @@ This writes `charts/stacked_bar.svg`, a stacked bar chart showing row counts per
 
 
 
-Repeatable commands:
+Repeatable commands (run from the repository root):
 
 ```bash
+make help
 make regenerate-stacked-bar
 ```
 

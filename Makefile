@@ -1,4 +1,9 @@
-.PHONY: regenerate-stacked-bar regenerate-stacked-bar-commit
+.PHONY: help regenerate-stacked-bar regenerate-stacked-bar-commit
+
+help:
+	@echo "Available targets:"
+	@echo "  make regenerate-stacked-bar         # Regenerate charts/stacked_bar.svg"
+	@echo "  make regenerate-stacked-bar-commit  # Regenerate and commit charts/stacked_bar.svg if changed"
 
 regenerate-stacked-bar:
 	python scripts/plot_stacked_bar.py
