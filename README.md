@@ -32,3 +32,8 @@ python scripts/create_stacked_bar_ppt.py
 ```
 
 This writes `charts/stacked_bar.pptx` locally (it is gitignored to avoid binary-file PR issues).
+
+
+## Wiki
+
+For a full program landing page with architecture, workflow, and operational details, see `WIKI.md`.
